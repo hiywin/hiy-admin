@@ -71,7 +71,6 @@
   </div>
 </template>
 <script>
-import { reactive, ref, onMounted } from "@vue/composition-api";
 import {
   stripScript,
   validatePass,
@@ -81,14 +80,8 @@ import {
 
 export default {
   name: "login",
-  // setup(props, context) {
-  //解构写法
-  setup(props, { refs }) {
-    //这里放置data数据、生命周期、自定义的函数
-    /**
-     * 验证函数
-     */
-    let validateUserName = (rule, value, callback) => {
+  data() {
+    var validateUserName = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入用户名"));
       } else if (validateEmail(value)) {
@@ -97,10 +90,10 @@ export default {
         callback();
       }
     };
-    let validatePassword = (rule, value, callback) => {
+    var validatePassword = (rule, value, callback) => {
       //过滤特殊字符
-      ruleForm.password = stripScript(value);
-      value = ruleForm.password;
+      this.ruleForm.password = stripScript(value);
+      value = this.ruleForm.password;
       if (value === "") {
         callback(new Error("请输入密码"));
       } else if (validatePass(value)) {
@@ -109,26 +102,26 @@ export default {
         callback();
       }
     };
-    let validatePasswords = (rule, value, callback) => {
+    var validatePasswords = (rule, value, callback) => {
       //如果module为login时不做验证
-      if (module.value === "login") {
+      if (this.module === "login") {
         callback();
       }
       //过滤特殊字符
-      ruleForm.passwords = stripScript(value);
-      value = ruleForm.passwords;
+      this.ruleForm.passwords = stripScript(value);
+      value = this.ruleForm.passwords;
       if (value === "") {
         callback(new Error("请输入密码"));
-      } else if (value != ruleForm.password) {
+      } else if (value != this.ruleForm.password) {
         callback(new Error("重复密码不正确"));
       } else {
         callback();
       }
     };
-    let checkCode = (rule, value, callback) => {
+    var checkCode = (rule, value, callback) => {
       //过滤特殊字符
-      ruleForm.code = stripScript(value);
-      value = ruleForm.code;
+      this.ruleForm.code = stripScript(value);
+      value = this.ruleForm.code;
       if (value === "") {
         callback(new Error("请输入验证码"));
       } else if (validateVCode(value)) {
@@ -137,39 +130,36 @@ export default {
         callback();
       }
     };
-    /**
-     * 声明数据
-     */
-    const menuTab = reactive([
-      { txt: "登陆", current: true, type: "login" },
-      { txt: "注册", current: false, type: "register" }
-    ]);
-    const module = ref("login");
-    const ruleForm = reactive({
-      username: "",
-      password: "",
-      passwords: "",
-      code: ""
-    });
-    const rules = reactive({
-      username: [{ validator: validateUserName, trigger: "blur" }],
-      password: [{ validator: validatePassword, trigger: "blur" }],
-      passwords: [{ validator: validatePasswords, trigger: "blur" }],
-      code: [{ validator: checkCode, trigger: "blur" }]
-    });
-
-    /**
-     * 声明函数
-     */
-    const toggleMenu = data => {
-      menuTab.forEach(elem => {
+    return {
+      module: "login",
+      menuTab: [
+        { txt: "登陆", current: true, type: "login" },
+        { txt: "注册", current: false, type: "register" }
+      ],
+      ruleForm: {
+        username: "",
+        password: "",
+        passwords: "",
+        code: ""
+      },
+      rules: {
+        username: [{ validator: validateUserName, trigger: "blur" }],
+        password: [{ validator: validatePassword, trigger: "blur" }],
+        passwords: [{ validator: validatePasswords, trigger: "blur" }],
+        code: [{ validator: checkCode, trigger: "blur" }]
+      }
+    };
+  },
+  methods: {
+    toggleMenu(data) {
+      this.menuTab.forEach(elem => {
         elem.current = false;
       });
       data.current = true;
-      module.value = data.type;
-    };
-    const submitForm = formName => {
-      refs[formName].validate(valid => {
+      this.module = data.type;
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate(valid => {
         if (valid) {
           alert("submit!");
         } else {
@@ -177,22 +167,7 @@ export default {
           return false;
         }
       });
-    };
-    /**
-     * 生命周期
-     */
-    onMounted(() => {});
-    /**
-     * 将声明的函数全部return
-     */
-    return {
-      menuTab,
-      module,
-      toggleMenu,
-      submitForm,
-      ruleForm,
-      rules
-    };
+    }
   }
 };
 </script>

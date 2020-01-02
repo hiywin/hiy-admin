@@ -54,7 +54,9 @@
               <el-input v-model="ruleForm.code"></el-input>
             </el-col>
             <el-col :span="9">
-              <el-button type="success" class="block">获取验证码</el-button>
+              <el-button type="success" class="block" @click="getSms()"
+                >获取验证码</el-button
+              >
             </el-col>
           </el-row>
         </el-form-item>
@@ -71,6 +73,7 @@
   </div>
 </template>
 <script>
+import api from "@/api/index";
 import { reactive, ref, onMounted } from "@vue/composition-api";
 import {
   stripScript,
@@ -168,7 +171,34 @@ export default {
       data.current = true;
       module.value = data.type;
     };
+    /**
+     * 获取验证码
+     */
+    const getSms = () => {
+      api.account
+        .getSms({ username: ruleForm.username })
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    };
+    /**
+     * 提交表单
+     */
     const submitForm = formName => {
+      api.account
+        .login({
+          LoginName: "测试11",
+          Password: "123456"
+        })
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
       refs[formName].validate(valid => {
         if (valid) {
           alert("submit!");
@@ -189,6 +219,7 @@ export default {
       menuTab,
       module,
       toggleMenu,
+      getSms,
       submitForm,
       ruleForm,
       rules

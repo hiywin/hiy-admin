@@ -9,6 +9,10 @@ const account = {
   getSms(params) {
     return http.post(base.sms + "/getSms/", params);
   },
+  //注册验证码
+  registerCode(params) {
+    return http.post(base.sms + "/register/", params);
+  },
   //登录
   login(params) {
     return http.post(base.hiy + "/account/login", JSON.stringify(params));

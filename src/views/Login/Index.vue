@@ -16,20 +16,22 @@
         :model="ruleForm"
         status-icon
         :rules="rules"
-        ref="ruleForm"
+        ref="loginForm"
         class="login-form"
       >
         <el-form-item prop="username" class="item-form">
-          <label>邮箱</label>
+          <label for="username">邮箱</label>
           <el-input
+            id="username"
             type="text"
             v-model="ruleForm.username"
             autocomplete="off"
           ></el-input>
         </el-form-item>
         <el-form-item prop="password" class="item-form">
-          <label>密码</label>
+          <label for="password">密码</label>
           <el-input
+            id="password"
             type="password"
             v-model="ruleForm.password"
             autocomplete="off"
@@ -40,22 +42,27 @@
           class="item-form"
           v-show="module === 'register'"
         >
-          <label>重复密码</label>
+          <label for="passwords">重复密码</label>
           <el-input
+            id="passwords"
             type="password"
             v-model="ruleForm.passwords"
             autocomplete="off"
           ></el-input>
         </el-form-item>
         <el-form-item prop="code" class="item-form">
-          <label>验证码</label>
+          <label for="code">验证码</label>
           <el-row :gutter="10">
             <el-col :span="15">
-              <el-input v-model="ruleForm.code"></el-input>
+              <el-input id="code" v-model="ruleForm.code"></el-input>
             </el-col>
             <el-col :span="9">
-              <el-button type="success" class="block" @click="getSms()"
-                >获取验证码</el-button
+              <el-button
+                type="success"
+                class="block"
+                @click="getSms()"
+                :disabled="codeButton.status"
+                >{{ codeButton.text }}</el-button
               >
             </el-col>
           </el-row>
@@ -64,8 +71,9 @@
           <el-button
             type="danger"
             class="login-top block"
-            @click="submitForm('ruleForm')"
-            >提交</el-button
+            @click="submitForm('loginForm')"
+            :disabled="loginButtonStatus"
+            >{{ module === "login" ? "登陆" : "注册" }}</el-button
           >
         </el-form-item>
       </el-form>
@@ -86,7 +94,7 @@ export default {
   name: "login",
   // setup(props, context) {
   //解构写法
-  setup(props, { refs }) {
+  setup(props, { refs, root }) {
     //这里放置data数据、生命周期、自定义的函数
     /**
      * 验证函数
@@ -148,6 +156,12 @@ export default {
       { txt: "注册", current: false, type: "register" }
     ]);
     const module = ref("login");
+    const loginButtonStatus = ref(true);
+    const codeButton = reactive({
+      status: false,
+      text: "获取验证码"
+    });
+    const timer = ref(null);
     const ruleForm = reactive({
       username: "",
       password: "",
@@ -165,6 +179,7 @@ export default {
      * 声明函数
      */
     const toggleMenu = data => {
+      refs["loginForm"].resetFields();
       menuTab.forEach(elem => {
         elem.current = false;
       });
@@ -175,33 +190,91 @@ export default {
      * 获取验证码
      */
     const getSms = () => {
+      if (ruleForm.username == "") {
+        root.$message.error("邮箱不能为空！");
+        return false;
+      }
+      if (validateEmail(ruleForm.username)) {
+        root.$message.error("邮箱格式有误！");
+        return false;
+      }
+      codeButton.status = true;
+      codeButton.text = "发送中";
       api.account
-        .getSms({ username: ruleForm.username })
+        .getSms({ username: ruleForm.username, module: module.value })
         .then(res => {
           console.log(res);
+          if (res.data.resCode == 0) {
+            root.$message({
+              message: res.data.message,
+              type: "success"
+            });
+            countDown(60);
+            loginButtonStatus.value = false;
+          } else {
+            root.$message.error(res.data.message);
+          }
         })
         .catch(err => {
           console.log(err);
         });
     };
     /**
+     * 倒计时
+     */
+    const countDown = number => {
+      let time = number;
+      timer.value = setInterval(() => {
+        time--;
+        if (time === 0) {
+          clearInterval(timer.value);
+          codeButton.status = false;
+          codeButton.text = "再次获取";
+        } else {
+          codeButton.text = `倒计时${time}秒`;
+        }
+      }, 1000);
+    };
+    /**
      * 提交表单
      */
     const submitForm = formName => {
-      api.account
-        .login({
-          LoginName: "测试11",
-          Password: "123456"
-        })
-        .then(res => {
-          console.log(res);
-        })
-        .catch(err => {
-          console.log(err);
-        });
       refs[formName].validate(valid => {
         if (valid) {
-          alert("submit!");
+          if (module.value === "register") {
+            api.account
+              .registerCode({
+                username: ruleForm.username,
+                password: ruleForm.password,
+                code: ruleForm.code,
+                module: module.value
+              })
+              .then(res => {
+                if (res.data.resCode === 0) {
+                  root.$message({
+                    message: res.data.message,
+                    type: "sucess"
+                  });
+                } else {
+                  root.$message.error(res.data.message);
+                }
+              })
+              .catch(err => {
+                console.log(err);
+              });
+          } else {
+            api.account
+              .login({
+                LoginName: ruleForm.username,
+                Password: ruleForm.password
+              })
+              .then(res => {
+                console.log(res);
+              })
+              .catch(err => {
+                console.log(err);
+              });
+          }
         } else {
           console.log("error submit!!");
           return false;
@@ -218,6 +291,9 @@ export default {
     return {
       menuTab,
       module,
+      loginButtonStatus,
+      countDown,
+      codeButton,
       toggleMenu,
       getSms,
       submitForm,

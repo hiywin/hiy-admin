@@ -239,47 +239,52 @@ export default {
      * 提交表单
      */
     const submitForm = formName => {
-      refs[formName].validate(valid => {
-        if (valid) {
-          if (module.value === "register") {
-            api.account
-              .registerCode({
-                username: ruleForm.username,
-                password: ruleForm.password,
-                code: ruleForm.code,
-                module: module.value
-              })
-              .then(res => {
-                if (res.data.resCode === 0) {
-                  root.$message({
-                    message: res.data.message,
-                    type: "sucess"
-                  });
-                } else {
-                  root.$message.error(res.data.message);
-                }
-              })
-              .catch(err => {
-                console.log(err);
-              });
-          } else {
-            api.account
-              .login({
-                LoginName: ruleForm.username,
-                Password: ruleForm.password
-              })
-              .then(res => {
-                console.log(res);
-              })
-              .catch(err => {
-                console.log(err);
-              });
-          }
-        } else {
-          console.log("error submit!!");
-          return false;
-        }
+      root.$router.push({
+        name: "Console"
       });
+      console.log(formName);
+
+      // refs[formName].validate(valid => {
+      //   if (valid) {
+      //     if (module.value === "register") {
+      //       api.account
+      //         .registerCode({
+      //           username: ruleForm.username,
+      //           password: ruleForm.password,
+      //           code: ruleForm.code,
+      //           module: module.value
+      //         })
+      //         .then(res => {
+      //           if (res.data.resCode === 0) {
+      //             root.$message({
+      //               message: res.data.message,
+      //               type: "sucess"
+      //             });
+      //           } else {
+      //             root.$message.error(res.data.message);
+      //           }
+      //         })
+      //         .catch(err => {
+      //           console.log(err);
+      //         });
+      //     } else {
+      //       api.account
+      //         .login({
+      //           LoginName: ruleForm.username,
+      //           Password: ruleForm.password
+      //         })
+      //         .then(res => {
+      //           console.log(res);
+      //         })
+      //         .catch(err => {
+      //           console.log(err);
+      //         });
+      //     }
+      //   } else {
+      //     console.log("error submit!!");
+      //     return false;
+      //   }
+      // });
     };
     /**
      * 生命周期
